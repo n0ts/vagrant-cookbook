@@ -3,7 +3,7 @@ include Chef::Mixin::ShellOut
 
 def load_current_resource
   @current_resource = Chef::Resource::VagrantPlugin.new(new_resource)
-  vp = shell_out("vagrant plugin list")
+  vp = vagrant_command("plugin list")
   if vp.stdout.include?(new_resource.plugin_name)
     @current_resource.installed(true)
     @current_resource.installed_version(vp.stdout.split[1].gsub(/[\(\)]/, ''))
@@ -15,7 +15,7 @@ action :install do
   unless installed?
     plugin_args = ""
     plugin_args += "--plugin-version #{new_resource.version}" if new_resource.version
-    shell_out("vagrant plugin install #{new_resource.plugin_name} #{plugin_args}")
+    vagrant_command("plugin install #{new_resource.plugin_name} #{plugin_args}")
     new_resource.updated_by_last_action(true)
   end
 end
@@ -31,7 +31,7 @@ action :uninstall do
 end
 
 def uninstall
-  shell_out("vagrant plugin uninstall #{new_resource.plugin_name}")
+  vagrant_command("plugin uninstall #{new_resource.plugin_name}")
 end
 
 def installed?
@@ -47,4 +47,18 @@ def version_match
     # the version matches otherwise because it's installed
     true
   end
+end
+
+def vagrant_command(cmd)
+  options = {}
+  if node[:os] == "linux"
+    home_dir =
+      (new_resource.plugins_user == "root") ? "/root" : "/home/#{new_resource.plugins_user}"
+    options = {
+      :user => new_resource.plugins_user,
+      :group => new_resource.plugins_group,
+      :env => {'HOME' => home_dir },
+    }
+  end
+  shell_out("vagrant #{cmd}", options)
 end
