@@ -16,6 +16,7 @@ action :install do
     plugin_args = ""
     plugin_args += "--plugin-version #{new_resource.version}" if new_resource.version
     vagrant_command("plugin install #{new_resource.plugin_name} #{plugin_args}")
+    vagrant_box_install
     new_resource.updated_by_last_action(true)
   end
 end
@@ -46,6 +47,25 @@ def version_match
   else
     # the version matches otherwise because it's installed
     true
+  end
+end
+
+def vagrant_box_install
+  box_list = {
+    "vagrant-aws" => {
+      "name" => "aws-dummy",
+      "url" => "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box",
+    },
+    "vagrant-managed-servers" => {
+      "name" => "managed-dummy",
+      "url" => "https://github.com/tknerr/vagrant-managed-servers/raw/master/dummy.box",
+    },
+  }
+  if box_list.keys.include?(new_resource.plugin_name)
+    vb = vagrant_command("box list")
+    unless vb.stdout.include?(box_list[new_resource.plugin_name]["name"])
+      vagrant_command("box add #{box_list[new_resource.plugin_name]["name"]} #{box_list[new_resource.plugin_name]["url"]}")
+    end
   end
 end
 
