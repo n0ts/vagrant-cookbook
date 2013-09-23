@@ -57,7 +57,7 @@ def vagrant_box_install
       "url" => "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box",
     },
     "vagrant-managed-servers" => {
-      "name" => "managed-dummy",
+      "name" => "managed-servers-dummy",
       "url" => "https://github.com/tknerr/vagrant-managed-servers/raw/master/dummy.box",
     },
   }
